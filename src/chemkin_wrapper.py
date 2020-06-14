@@ -3,6 +3,7 @@ import time
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from utils import fix_dir
 
 import sys
 if sys.version_info[0] < 3:
@@ -14,8 +15,8 @@ else:
 def init_conditions(working_dir='./', T=1300, P=4,
                     MF={'POSF10325': .004, 'AR': .996}, mode='UV',
                     TIME=2e-3, DELT=2e-5):
-    if working_dir[-1] != '/':
-        working_dir += '/'
+    ''' write initial conditions to file '''
+    working_dir = fix_dir(working_dir)
     inputs = ''
     if mode == 'UV':
         inputs += 'CONV\n'
@@ -35,8 +36,7 @@ def init_conditions(working_dir='./', T=1300, P=4,
 
 
 def extract_from_outputs(working_dir='./'):
-    if working_dir[-1] != '/':
-        working_dir += '/'
+    working_dir = fix_dir(working_dir)
     with open(working_dir+'senkin.ign', 'r') as f:
         lines = f.read()
         lines = lines.split('Time Integration:')[-1]
@@ -74,8 +74,7 @@ def plot_outputs(d, names=[], filepath="", log="", title=""):
 def chemkin_wrapper(working_dir='./', T=1225, P=1.7,
                     MF={'POSF10325': .004, 'AR': .996}, mode='HP',
                     TIME=2e-3, DELT=1e-6):
-    if working_dir[-1] != '/':
-        working_dir += '/'
+    working_dir = fix_dir(working_dir)
     init_conditions(working_dir, T, P, MF, mode, TIME, DELT)
     cwd = os.getcwd()
     os.system('cd '+working_dir+'; ./chem; cd '+cwd)

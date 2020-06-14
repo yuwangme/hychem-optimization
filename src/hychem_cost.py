@@ -4,6 +4,7 @@ from chemkin_wrapper import chemkin_wrapper
 from scipy.interpolate import interp1d
 from multiprocessing import Pool
 import matplotlib.pyplot as plt
+from utils import fix_dir
 
 N_C = 7
 N_H = 15
@@ -78,17 +79,18 @@ def build_hychem_rxn(params):
     b_a = (2.+2.*N_C+2.*gamma-N_H)/6.
     e_a = (N_C-gamma-(7.-chi)*b_a-(1-beta))/(2.+3.*lambda_3+4*lambda_4)
 
-    decomp_coef = \
-        [e_d, e_d*lambda_3, e_d*lambda_4, b_d*chi, b_d*(1-chi), alpha, 2-alpha]
+    decomp_coef = [e_d, e_d*lambda_3, e_d*lambda_4, b_d*chi, b_d*(1-chi),
+                   alpha, 2-alpha]
     decomp_coef = list(map(lambda x: round(x, 6), decomp_coef))
-    oxy_coef = \
-        [gamma, e_a, e_a*lambda_3, e_a*lambda_4, b_a*chi, b_a*(1-chi), beta, 1-beta]
+    oxy_coef = [gamma, e_a, e_a*lambda_3, e_a*lambda_4,
+                b_a*chi, b_a*(1-chi), beta, 1-beta]
     oxy_coef = list(map(lambda x: round(x, 6), oxy_coef))
     # print(sum([H_ABS_PROD_C[i]*oxy_coef[i] for i in range(len(oxy_coef))]))
     # print(1+sum([H_ABS_PROD_H[i]*oxy_coef[i] for i in range(len(oxy_coef))]))
     lines = ''
-    lines += FUEL_NAME+'=>'+"".join([str(np.round(decomp_coef[i], 6))+DECOMP_PROD[i]+"+"
-                                     for i in range(len(DECOMP_PROD))])
+    lines += FUEL_NAME+'=>'
+    lines += "".join([str(np.round(decomp_coef[i], 6))+DECOMP_PROD[i]+"+"
+                      for i in range(len(DECOMP_PROD))])
     lines = lines[:-1]+" {:e} {:e} {:e}\n".format(A1, m1, E1)
     for i in range(H_abs_K.shape[0]-1):
         A = H_abs_K[i, 0]
@@ -113,8 +115,7 @@ def build_hychem_rxn(params):
 
 
 def write_cheminp(dir, x, bounds=A2_C1_BOUNDS):
-    if dir[-1] != '/':
-        dir += '/'
+    dir = fix_dir(dir)
     assert(x.shape[0] == bounds.shape[0])
     assert(2 == bounds.shape[1])
     outputs = ''
@@ -133,8 +134,7 @@ def write_cheminp(dir, x, bounds=A2_C1_BOUNDS):
 
 
 def hychem_cost(dir, x, d, cond):
-    if dir[-1] != '/':
-        dir += '/'
+    dir = fix_dir(dir)
     # print("hychem_cost", dir)
     write_cheminp(dir, x)
     sim = chemkin_wrapper(working_dir=dir, **cond)  # HyChem simulated
@@ -151,11 +151,11 @@ def hychem_cost(dir, x, d, cond):
     return cost
 
 
-def grad_hychem_gmm(dir, params, cond, perturb=1e-3,
-                    target_species=['C2H4', 'C3H6', 'C4H81', 'CH4', 'POSF10325', 'H2'],
-                    target_times=np.arange(1, 11)/10*2e3):
-    if dir[-1] != '/':
-        dir += '/'
+def grad_hychem_gmm(
+        dir, params, cond, perturb=1e-3,
+        target_species=['C2H4', 'C3H6', 'C4H81', 'CH4', 'POSF10325', 'H2'],
+        target_times=np.arange(1, 11)/10*2e3):
+    dir = fix_dir(dir)
     x = params_to_x(params, A2_C1_BOUNDS)
     N_grad = 15
 
@@ -187,8 +187,7 @@ def grad_hychem_gmm(dir, params, cond, perturb=1e-3,
 
 
 def idt_cost(dir, x, idt, cond):
-    if dir[-1] != '/':
-        dir += '/'
+    dir = fix_dir(dir)
     write_cheminp(dir, x)
     sim = chemkin_wrapper(dir, **cond, TIME=3*idt,
                           DELT=max(1E-6, idt/1e3/100), mode="UV")
@@ -244,7 +243,8 @@ class par_idt_helper:
 
     def __call__(self, i):
         return grad_idt_i(self.dir+str(i)+"/",
-                          self.x, self.idt, i, self.perturb, self.cond, self.cost)
+                          self.x, self.idt, i,
+                          self.perturb, self.cond, self.cost)
 
 
 class grad_hychem_cost_pool:
@@ -271,7 +271,8 @@ class grad_idt_cost_pool:
 
     def __call__(self, dir, x, idt, cond, idx=range(15, 27), perturb=.001):
         cost, _ = idt_cost(dir, x, idt, cond)
-        grad = self.p.map(par_idt_helper(dir, x, idt, perturb, cond, cost), idx)
+        grad = self.p.map(
+            par_idt_helper(dir, x, idt, perturb, cond, cost), idx)
         N = x.shape[0]
         grad += [0]*(N-len(idx))
         return cost, np.array(grad)

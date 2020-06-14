@@ -12,7 +12,8 @@ else:
 
 
 def init_conditions(working_dir='./', T=1300, P=4,
-                    MF={'POSF10325': .004, 'AR': .996}, mode='UV', TIME=2e-3, DELT=2e-5):
+                    MF={'POSF10325': .004, 'AR': .996}, mode='UV',
+                    TIME=2e-3, DELT=2e-5):
     if working_dir[-1] != '/':
         working_dir += '/'
     inputs = ''
@@ -71,7 +72,8 @@ def plot_outputs(d, names=[], filepath="", log="", title=""):
 
 
 def chemkin_wrapper(working_dir='./', T=1225, P=1.7,
-                    MF={'POSF10325': .004, 'AR': .996}, mode='HP', TIME=2e-3, DELT=1e-6):
+                    MF={'POSF10325': .004, 'AR': .996}, mode='HP',
+                    TIME=2e-3, DELT=1e-6):
     if working_dir[-1] != '/':
         working_dir += '/'
     init_conditions(working_dir, T, P, MF, mode, TIME, DELT)
@@ -90,7 +92,8 @@ def runtime_chemkin_wrapper(working_dir='./'):
         end_time = time.time()
         times[i] = end_time-start_time
         print(str(i)+" out of "+str(N)+" done")
-    np.savetxt('../debug_figures/hist_chemkin_wrapper.csv', times, delimiter=',')
+    np.savetxt('../debug_figures/hist_chemkin_wrapper.csv',
+               times, delimiter=',')
     plt.figure()
     plt.hist(times)
     plt.xlabel('time [s]')

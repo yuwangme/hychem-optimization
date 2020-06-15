@@ -4,7 +4,7 @@ from chemkin_wrapper import chemkin_wrapper
 from scipy.interpolate import interp1d
 from multiprocessing import Pool
 import matplotlib.pyplot as plt
-from utils import fix_dir
+from src.utils import fix_dir
 
 N_C = 7
 N_H = 15
@@ -109,12 +109,12 @@ def build_hychem_rxn(params):
     lines = lines[:-1]+" {:e} {:e} {:e}\n".format(A8, m8, E8)
     return lines
 
-# take in
-# params: (d,1)
-# bounds (l,u): (d,2)
-
 
 def write_cheminp(dir, x, bounds=A2_C1_BOUNDS):
+    ''' input
+        params: (d,1)
+        bounds (l,u): (d,2)
+    '''
     dir = fix_dir(dir)
     assert(x.shape[0] == bounds.shape[0])
     assert(2 == bounds.shape[1])

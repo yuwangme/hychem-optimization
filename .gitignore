@@ -129,3 +129,7 @@ dmypy.json
 .pyre/
 
 .DS_Store
+senkin.trm
+senkin.sav
+chem.out
+chem.bin

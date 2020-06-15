@@ -3,7 +3,7 @@ import time
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from utils import fix_dir
+from src.utils import fix_dir
 
 import sys
 if sys.version_info[0] < 3:
@@ -19,15 +19,18 @@ def init_conditions(working_dir='./', T=1300, P=4,
     working_dir = fix_dir(working_dir)
     inputs = ''
     if mode == 'UV':
+        # constant UV
         inputs += 'CONV\n'
     elif mode == 'HP':
+        # constant HP
         inputs += 'CONP\n'
     inputs += 'RTOL 1.0E-6\n'
     inputs += 'ATOL 1.0E-12\n'
-    inputs += 'PRES '+str(P)+'\n'
-    inputs += 'TEMP '+str(T)+'\n'
-    inputs += 'TIME '+str(TIME)+'\n'
-    inputs += 'DELT '+str(DELT)+'\n'
+    inputs += 'PRES '+str(P)+'\n'  # pressure
+    inputs += 'TEMP '+str(T)+'\n'  # temperature
+    inputs += 'TIME '+str(TIME)+'\n'  # total time of simulation
+    inputs += 'DELT '+str(DELT)+'\n'  # time step
+    # initial mole fractions
     for s in MF:
         inputs += 'REAC '+s.upper()+' '+str(MF[s])+'\n'
     inputs += 'END\n'
@@ -36,17 +39,18 @@ def init_conditions(working_dir='./', T=1300, P=4,
 
 
 def extract_from_outputs(working_dir='./'):
+    ''' extract mole fraction time history from file '''
     working_dir = fix_dir(working_dir)
     with open(working_dir+'senkin.ign', 'r') as f:
         lines = f.read()
         lines = lines.split('Time Integration:')[-1]
         d = pd.read_csv(StringIO(lines), sep='\s+')
-        # d['t'] = d['t']/1e3
-        # print('extract_from_outputs: '+working_dir+'senkin.ign\t',d.shape)
+        # d['t'] = d['t']/1e3  # time unit
         return d
 
 
 def plot_outputs(d, names=[], filepath="", log="", title=""):
+    ''' plot mole fraction time history '''
     if not names:
         names = [n for n in list(d) if n not in set(["t", "T", "P"])]
     plt.figure()
@@ -74,12 +78,19 @@ def plot_outputs(d, names=[], filepath="", log="", title=""):
 def chemkin_wrapper(working_dir='./', T=1225, P=1.7,
                     MF={'POSF10325': .004, 'AR': .996}, mode='HP',
                     TIME=2e-3, DELT=1e-6):
+    ''' wrapper for running chemkin '''
     working_dir = fix_dir(working_dir)
+    # write initial condition to file
     init_conditions(working_dir, T, P, MF, mode, TIME, DELT)
+    # change current directory
     cwd = os.getcwd()
+    # run ./chem
     os.system('cd '+working_dir+'; ./chem; cd '+cwd)
+    # run ./igsenp
     os.system('cd '+working_dir+'; ./igsenp; cd '+cwd)
-    return extract_from_outputs(working_dir)
+    # extract mole fraction time history
+    d = extract_from_outputs(working_dir)
+    return d
 
 
 def runtime_chemkin_wrapper(working_dir='./'):

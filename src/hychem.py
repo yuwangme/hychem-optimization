@@ -178,11 +178,12 @@ class HYCHEM_A2:
         return cost
 
     def loss(self, x, d, cond):
+        ''' loss of HyChem parameters x against data d at condition cond '''
         self.x, self.d, self.cond = x.copy(), d.copy(), cond
         self.cost = self._loss(x)
         return self.cost
 
-    def grad(self, idx, perturb=1e-3):
+    def grad(self, idx, perturb=1e-2):
         ''' gradient of parameters at indices idx '''
         out = np.zeros_like(self.x)
         for i in idx:

@@ -18,13 +18,13 @@ class CHEMKIN:
             plots mole fraction time history
     '''
 
-    def __init__(self):
-        return
+    def __init__(self, working_dir):
+        self.working_dir = fix_dir(working_dir)
 
-    def _init_conditions(self, working_dir='./', cond=CONDITION(),
-                         mode='UV', TIME=2e-3, DELT=2e-5):
+    def _init_conditions(self, cond=CONDITION(), mode='UV',
+                         TIME=2e-3, DELT=2e-5):
         ''' (private) write initial conditions to file '''
-        working_dir = fix_dir(working_dir)
+        working_dir = self.working_dir
         T, P, MF = cond.T(), cond.P(), cond.MF()
         inputs = ''
         if mode == 'UV':
@@ -46,12 +46,12 @@ class CHEMKIN:
         with open(working_dir+'senkin.inp', 'w') as f:
             f.write(inputs)
 
-    def chemkin_wrapper(self, working_dir='./', cond=CONDITION(),
+    def chemkin_wrapper(self, cond=CONDITION(),
                         mode='HP', TIME=2e-3, DELT=1e-6):
         ''' (public) wrapper for running chemkin '''
-        working_dir = fix_dir(working_dir)
+        working_dir = self.working_dir
         # write initial condition to file
-        self._init_conditions(working_dir, cond, mode, TIME, DELT)
+        self._init_conditions(cond, mode, TIME, DELT)
         # change current directory
         cwd = os.getcwd()
         # run ./chem
@@ -59,12 +59,13 @@ class CHEMKIN:
         # run ./igsenp
         os.system('cd '+working_dir+'; ./igsenp; cd '+cwd)
         # extract mole fraction time history
-        self._d = d = self._extract_from_outputs(working_dir)
+        d = self._extract_from_outputs()
+        self._d = d.copy()
         return d
 
-    def _extract_from_outputs(self, working_dir='./'):
+    def _extract_from_outputs(self):
         ''' (private) extract mole fraction time history from file '''
-        working_dir = fix_dir(working_dir)
+        working_dir = self.working_dir
         with open(working_dir+'senkin.ign', 'r') as f:
             lines = f.read()
             lines = lines.split('Time Integration:')[-1]

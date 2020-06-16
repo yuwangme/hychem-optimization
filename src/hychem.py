@@ -24,7 +24,14 @@ class CONDITION:
 
 
 class HYCHEM:
-    ''' class holding hychem parameters '''
+    ''' class holding hychem parameters and generates mechanism file lines '''
 
     def __init__(self):
-        pass
+        return
+
+
+class OPTIMIZER:
+    ''' class for optimization of hychem parameters '''
+
+    def __init__(self):
+        return

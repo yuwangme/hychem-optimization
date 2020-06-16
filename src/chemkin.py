@@ -59,7 +59,7 @@ class CHEMKIN:
         # run ./igsenp
         os.system('cd '+working_dir+'; ./igsenp; cd '+cwd)
         # extract mole fraction time history
-        d = self._extract_from_outputs(working_dir)
+        self._d = d = self._extract_from_outputs(working_dir)
         return d
 
     def _extract_from_outputs(self, working_dir='./'):
@@ -72,8 +72,11 @@ class CHEMKIN:
             # d['t'] = d['t']/1e3  # time unit
             return d
 
-    def plot_outputs(self, d, names=[], filepath="", log="", title=""):
+    def plot_outputs(self, d=None, names=[], filepath="", log="", title=""):
         ''' (public) plot mole fraction time history '''
+        # plot the last resul (time history)
+        if not d:
+            d = self._d
         if not names:
             names = [n for n in list(d) if n not in set(["t", "T", "P"])]
         plt.figure()

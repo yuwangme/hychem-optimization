@@ -2,37 +2,13 @@ import os
 import pandas as pd
 import matplotlib.pyplot as plt
 from src.utils import fix_dir
+from src.hychem import CONDITION
 
 import sys
 if sys.version_info[0] < 3:
     from StringIO import StringIO
 else:
     from io import StringIO
-
-
-class CONDITION:
-    ''' class for experimental conditions '''
-
-    def __init__(self, T=None, P=None, MF={None: None}):
-        self._T = T
-        self._P = P
-        self._MF = MF
-        return
-
-    def T(self):
-        return self._T
-
-    def P(self):
-        return self._P
-
-    def MF(self):
-        return self._MF
-
-    def __repr__(self):
-        out = f"Temperature: {self._T} K\nPressure: {self._P} atm\n"
-        for k, v in self._MF.items():
-            out += f"{k}: {v} (fraction)\n"
-        return out
 
 
 class CHEMKIN:
@@ -47,7 +23,7 @@ class CHEMKIN:
 
     def _init_conditions(self, working_dir='./', cond=CONDITION(),
                          mode='UV', TIME=2e-3, DELT=2e-5):
-        ''' write initial conditions to file '''
+        ''' (private) write initial conditions to file '''
         working_dir = fix_dir(working_dir)
         T, P, MF = cond.T(), cond.P(), cond.MF()
         inputs = ''
@@ -72,7 +48,7 @@ class CHEMKIN:
 
     def chemkin_wrapper(self, working_dir='./', cond=CONDITION(),
                         mode='HP', TIME=2e-3, DELT=1e-6):
-        ''' wrapper for running chemkin '''
+        ''' (public) wrapper for running chemkin '''
         working_dir = fix_dir(working_dir)
         # write initial condition to file
         self._init_conditions(working_dir, cond, mode, TIME, DELT)
@@ -87,7 +63,7 @@ class CHEMKIN:
         return d
 
     def _extract_from_outputs(self, working_dir='./'):
-        ''' extract mole fraction time history from file '''
+        ''' (private) extract mole fraction time history from file '''
         working_dir = fix_dir(working_dir)
         with open(working_dir+'senkin.ign', 'r') as f:
             lines = f.read()
@@ -97,7 +73,7 @@ class CHEMKIN:
             return d
 
     def plot_outputs(self, d, names=[], filepath="", log="", title=""):
-        ''' plot mole fraction time history '''
+        ''' (public) plot mole fraction time history '''
         if not names:
             names = [n for n in list(d) if n not in set(["t", "T", "P"])]
         plt.figure()

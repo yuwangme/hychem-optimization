@@ -183,14 +183,14 @@ class HYCHEM_A2:
         self.cost = self._loss(x)
         return self.cost
 
-    def grad(self, idx, perturb=1e-2):
+    def grad(self, idx, perturb=1e-3):
         ''' gradient of parameters at indices idx '''
         out = np.zeros_like(self.x)
         for i in idx:
             newx = self.x.copy()
-            newx[i] = self.x[i]*(1+perturb)+1e-3
-            if newx[i] > 1:
-                newx[i] = self.x[i]*(1-perturb)
+            newx[i] = self.x[i]+perturb
+            # if newx[i] > 1:
+            #     newx[i] = self.x[i]*(1-perturb)
             newcost = self._loss(newx)
             out[i] = (newcost-self.cost)/(newx[i]-self.x[i])
         return out
